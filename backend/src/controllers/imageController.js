@@ -1,17 +1,13 @@
-import { openai } from '../services/openai.js';
+import { generateDalleImage } from '../services/imageService.js';
 
 export const generateImage = async (req, res) => {
   try {
     const { prompt } = req.body;
-    const image = await openai.images.generate({
-      model: "dall-e-3",
-      prompt: prompt,
-      n: 1,
-      size: "1024x1024",
-    });
-
-    res.json({ imageUrl: image.data[0].url });
+    const imageUrl = await generateDalleImage(prompt);
+    console.log(imageUrl);
+    res.json({ imageUrl });
   } catch (error) {
+    console.error('Image generation error:', error);
     res.status(500).json({ error: error.message });
   }
 };

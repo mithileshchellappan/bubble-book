@@ -12,7 +12,6 @@ export interface Story {
 export interface StoryPage {
   id: string;
   text: string;
-  imageUrl: string;
   panels: StoryPanel[];
 }
 
@@ -24,13 +23,20 @@ export interface StoryPanel {
 }
 
 export interface StoryDraft {
+  id: string;
   title: string;
   pages: {
+    id: string;
     text: string;
+    imagePrompt: string;
     panels: {
+      id: string;
       imagePrompt: string;
+      order: number;
     }[];
   }[];
+  genre: string;
+  theme: string;
 }
 export type Genre = 'fantasy' | 'adventure' | 'educational' | 'bedtime' | 'fairy-tale';
 export type Theme = 'nature' | 'animals' | 'space' | 'ocean' | 'friendship' | 'family';

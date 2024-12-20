@@ -28,7 +28,7 @@ export const StoryLibrary: React.FC = () => {
           >
             <div className="aspect-video mb-4 rounded-lg overflow-hidden">
               <img
-                src={story.pages[0].imageUrl}
+                src={story.pages[0].panels[0].imageUrl}
                 alt={story.title}
                 className="w-full h-full object-cover"
               />

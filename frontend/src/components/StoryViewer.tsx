@@ -1,40 +1,41 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
+import { useStoryStore } from '../stores/useStoryStore';
 import { PlayMode } from './story-view/PlayMode';
 import { EditMode } from './story-view/EditMode';
-import { useStoryStore } from '../stores/useStoryStore';
 import { Navigation } from './Navigation';
-import { Play, BookOpen, X } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { X, Maximize2, Minimize2, Play } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const StoryViewer: React.FC = () => {
   const [viewMode, setViewMode] = useState<'play' | 'edit'>('edit');
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showControls, setShowControls] = useState(false);
   const { currentStory, updatePage } = useStoryStore();
 
+  const toggleFullscreen = useCallback(async () => {
+    if (!document.fullscreenElement) {
+      await document.documentElement.requestFullscreen();
+      setIsFullscreen(true);
+    } else {
+      await document.exitFullscreen();
+      setIsFullscreen(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleEsc = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && document.fullscreenElement) {
+        document.exitFullscreen();
+        setIsFullscreen(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleEsc);
+    return () => document.removeEventListener('keydown', handleEsc);
+  }, []);
+
   if (!currentStory) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-purple-100 via-blue-50 to-purple-100 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full text-center">
-          <BookOpen className="w-12 h-12 text-purple-500 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-gray-900 mb-2">No Story Selected</h2>
-          <p className="text-gray-600 mb-4">Please select a story from your library or create a new one.</p>
-          <div className="space-y-3">
-            <Link
-              to="/create"
-              className="block w-full bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
-            >
-              Create New Story
-            </Link>
-            <Link
-              to="/"
-              className="block w-full bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors"
-            >
-              View Library
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   const currentPageData = currentStory.pages[currentStory.currentPage];
@@ -45,14 +46,40 @@ export const StoryViewer: React.FC = () => {
 
   if (viewMode === 'play') {
     return (
-      <div className="fixed inset-0 bg-black">
-        <button
-          onClick={() => setViewMode('edit')}
-          className="absolute top-4 right-4 z-50 p-2 rounded-full bg-black/20 hover:bg-black/30 
-                   transition-colors text-white"
-        >
-          <X className="w-6 h-6" />
-        </button>
+      <div 
+        className="fixed inset-0 bg-black"
+        onMouseMove={() => setShowControls(true)}
+        onMouseLeave={() => setShowControls(false)}
+      >
+        <AnimatePresence>
+          {showControls && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute top-4 right-4 z-50 flex gap-2"
+            >
+              <button
+                onClick={toggleFullscreen}
+                className="p-2 rounded-full bg-black/20 hover:bg-black/30 
+                         transition-colors text-white"
+              >
+                {isFullscreen ? (
+                  <Minimize2 className="w-6 h-6" />
+                ) : (
+                  <Maximize2 className="w-6 h-6" />
+                )}
+              </button>
+              <button
+                onClick={() => setViewMode('edit')}
+                className="p-2 rounded-full bg-black/20 hover:bg-black/30 
+                         transition-colors text-white"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <AnimatePresence initial={false} mode="wait">
           <motion.div

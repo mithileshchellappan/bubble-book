@@ -1,6 +1,5 @@
 import { Story } from '../models/Story.js';
 import { generateStoryDraft } from '../services/textService.js';
-import { generateImage } from '../services/imageService.js';
 
 export const getAllStories = async (req, res) => {
   try {

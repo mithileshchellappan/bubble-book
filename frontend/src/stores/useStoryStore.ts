@@ -12,6 +12,9 @@ interface StoryStore {
   generateFullStory: () => Promise<void>;
   clearDraft: () => void;
   updatePage: (pageId: string, customPrompt: string) => void;
+  previousPage: () => void;
+  nextPage: () => void;
+  setCurrentStory: (story: Story) => void;
 }
 
 export const useStoryStore = create<StoryStore>((set, get) => ({
@@ -75,12 +78,14 @@ export const useStoryStore = create<StoryStore>((set, get) => ({
         };
       }));
 
-      const story = {
+      const story: Story = {
         id: Date.now().toString(),
         title: currentDraft.title,
         pages: pagesWithImages,
         currentPage: 0,
-        createdAt: new Date().toISOString()
+        createdAt: new Date(),
+        genre: currentDraft.genre,
+        theme: currentDraft.theme
       };
 
       set({ currentStory: story, stories: [story, ...get().stories], currentDraft: null });
@@ -100,5 +105,19 @@ export const useStoryStore = create<StoryStore>((set, get) => ({
     );
 
     set({ currentStory: { ...currentStory, pages: updatedPages } });
-  }
+  },
+
+  previousPage: () => {
+    const { currentStory } = get();
+    if (!currentStory || currentStory.currentPage <= 0) return;
+    set({ currentStory: { ...currentStory, currentPage: currentStory.currentPage - 1 } });
+  },
+
+  nextPage: () => {
+    const { currentStory } = get();
+    if (!currentStory || currentStory.currentPage >= currentStory.pages.length - 1) return;
+    set({ currentStory: { ...currentStory, currentPage: currentStory.currentPage + 1 } });
+  },
+
+  setCurrentStory: (story: Story) => set({ currentStory: story })
 }));

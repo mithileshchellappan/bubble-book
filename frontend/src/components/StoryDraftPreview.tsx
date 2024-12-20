@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { StoryDraft } from '../types/story';
 import { motion } from 'framer-motion';
 import { Wand2, X, Check } from 'lucide-react';
