@@ -1,0 +1,11 @@
+*/node_modules
+node_modules
+.env
+*/env
+# Azure AD B2C
+.env
+.env.local
+.env.development
+AZURE_CLIENT_ID
+AZURE_TENANT_NAME
+.ins
