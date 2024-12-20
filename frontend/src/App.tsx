@@ -14,16 +14,18 @@ import { SignUp } from './pages/SignUp';
 import { ClerkProvider, SignedIn } from '@clerk/clerk-react';
 import { neobrutalism } from '@clerk/themes';
 import { useUser } from '@clerk/clerk-react';
+import { useViewModeStore } from './stores/useViewModeStore';
+import { PlayModeViewer } from './components/PlayModeViewer';
 
 // Separate component for the app content that uses router hooks
 const AppContent: React.FC = () => {
   const location = useLocation();
-  const isStoryView = location.pathname.startsWith('/story/');
+  const shouldHideNav = location.pathname.includes('/story/play/');
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-100 via-blue-50 to-purple-100">
       <SignedIn>
-        {!isStoryView && (
+        {!shouldHideNav && (
           <nav className="bg-white/80 backdrop-blur-sm shadow-sm sticky top-0 z-50">
             <div className="max-w-7xl mx-auto px-4">
               <div className="flex items-center justify-between h-16">
@@ -82,6 +84,14 @@ const AppContent: React.FC = () => {
           element={
             <RequireAuth>
               <StoryViewer />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/story/play/:id"
+          element={
+            <RequireAuth>
+              <PlayModeViewer />
             </RequireAuth>
           }
         />

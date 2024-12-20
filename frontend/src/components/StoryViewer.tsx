@@ -5,12 +5,15 @@ import { EditMode } from './story-view/EditMode';
 import { Navigation } from './Navigation';
 import { X, Maximize2, Minimize2, Play } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useViewModeStore } from '../stores/useViewModeStore';
+import { useNavigate } from 'react-router-dom';
 
 export const StoryViewer: React.FC = () => {
-  const [viewMode, setViewMode] = useState<'play' | 'edit'>('edit');
+  const { mode: viewMode, setMode: setViewMode } = useViewModeStore();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(false);
   const { currentStory, updatePage } = useStoryStore();
+  const navigate = useNavigate();
 
   const toggleFullscreen = useCallback(async () => {
     if (!document.fullscreenElement) {
@@ -120,7 +123,7 @@ export const StoryViewer: React.FC = () => {
               <h1 className="text-2xl font-bold text-purple-900">{currentStory.title}</h1>
             </div>
             <button
-              onClick={() => setViewMode('play')}
+              onClick={() => navigate(`/story/play/${currentStory.id}`)}
               className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg
                        hover:bg-purple-700 transition-colors"
             >
