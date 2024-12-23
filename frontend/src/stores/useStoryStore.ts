@@ -15,6 +15,7 @@ interface StoryStore {
   previousPage: () => void;
   nextPage: () => void;
   setCurrentStory: (story: Story) => void;
+  updatePanelImage: (pageId: string, panelId: string, newImageUrl: string) => void;
 }
 
 export const useStoryStore = create<StoryStore>((set, get) => ({
@@ -119,5 +120,21 @@ export const useStoryStore = create<StoryStore>((set, get) => ({
     set({ currentStory: { ...currentStory, currentPage: currentStory.currentPage + 1 } });
   },
 
-  setCurrentStory: (story: Story) => set({ currentStory: story })
+  setCurrentStory: (story: Story) => set({ currentStory: story }),
+
+  updatePanelImage: (pageId: string, panelId: string, newImageUrl: string) => {
+    const { currentStory } = get();
+    if (!currentStory) return;
+
+    const updatedPages = currentStory.pages.map(page => 
+      page.id === pageId ? {
+        ...page,
+        panels: page.panels.map(panel => 
+          panel.id === panelId ? { ...panel, imageUrl: newImageUrl } : panel
+        )
+      } : page
+    );
+
+    set({ currentStory: { ...currentStory, pages: updatedPages } });
+  }
 }));

@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { StoryDraft } from '../types/story';
 import { motion } from 'framer-motion';
-import { Wand2, X, Check } from 'lucide-react';
+import { Wand2, X, Check, ChevronLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useStoryStore } from '../stores/useStoryStore';
 import { StoryGenerationProgress } from './StoryGenerationProgress';
+import { VoiceSelection } from './voice/VoiceSelection';
 
 interface StoryDraftPreviewProps {
   draft: StoryDraft;
@@ -20,9 +21,14 @@ export const StoryDraftPreview: React.FC<StoryDraftPreviewProps> = ({
   isGenerating
 }) => {
   const [showProgress, setShowProgress] = useState(false);
+  const [showVoiceSelection, setShowVoiceSelection] = useState(false);
   const navigate = useNavigate();
 
-  const handleApproveClick = async () => {
+  const handleApproveClick = () => {
+    setShowVoiceSelection(true);
+  };
+
+  const handleVoiceSelect = async (voiceId: string, style: string) => {
     setShowProgress(true);
     await onApprove();
     setTimeout(() => {
@@ -35,6 +41,31 @@ export const StoryDraftPreview: React.FC<StoryDraftPreviewProps> = ({
 
   if (showProgress) {
     return <StoryGenerationProgress onComplete={() => setShowProgress(false)} />;
+  }
+
+  if (showVoiceSelection) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-5xl mx-auto p-8 bg-white rounded-2xl shadow-xl"
+      >
+        <div className="mb-6">
+          <button 
+            onClick={() => setShowVoiceSelection(false)}
+            className="text-gray-600 hover:text-gray-900 flex items-center gap-2"
+          >
+            <ChevronLeft className="w-5 h-5" />
+            Back to Preview
+          </button>
+        </div>
+        
+        <VoiceSelection 
+          onConfirm={handleVoiceSelect}
+          onBack={() => setShowVoiceSelection(false)}
+        />
+      </motion.div>
+    );
   }
 
   return (

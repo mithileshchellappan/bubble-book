@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { StoryPage } from '../../types/story';
 import { Pencil, Save, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
 import { useStoryStore } from '../../stores/useStoryStore';
@@ -11,9 +11,8 @@ interface EditModeProps {
 
 export const EditMode: React.FC<EditModeProps> = ({ page, onUpdatePage }) => {
   const [isEditing, setIsEditing] = React.useState(false);
-  const [customPrompt, setCustomPrompt] = React.useState(page.customPrompt || '');
+  const [customPrompt, setCustomPrompt] = React.useState(page.text || '');
   const { currentStory, nextPage, previousPage, updatePanelImage } = useStoryStore(); // Add updatePanelImage
-  const [hoveredPanel, setHoveredPanel] = useState<string | null>(null);
 
   const canGoNext = currentStory && currentStory.currentPage < currentStory.pages.length - 1;
   const canGoPrevious = currentStory && currentStory.currentPage > 0;
