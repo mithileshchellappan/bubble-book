@@ -16,11 +16,13 @@ export const getAllStories = async (req, res) => {
 
 export const getStoryById = async (req, res) => {
   try {
-    console.log('Getting story by ID:', req.params.id);
     const story = await Story.findOne({ id: req.params.id });
+    if (!story) {
+      return res.status(404).json({ error: 'Story not found' });
+    }
     res.json(story);
   } catch (error) {
-    console.error('Failed to get story by ID:', error);
+    console.error('Failed to get story:', error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -59,16 +61,19 @@ export const generateStory = async (req, res) => {
         id: voiceId,
         style: voiceStyle
       },
-      pages: draft.pages.map(page => ({
+      pages: draft.pages.map((page, pageIndex) => ({
+        id: `page-${storyId}-${pageIndex}`,
         text: page.text,
         audioStatus: 'PENDING',
-        panels: page.panels.map(panel => ({ 
+        panels: page.panels.map((panel, panelIndex) => ({ 
+          id: `panel-${storyId}-${pageIndex}-${panelIndex}`,
           imagePrompt: panel.imagePrompt,
-          imageStatus: 'PENDING'
+          imageStatus: 'PENDING',
+          order: panelIndex
         }))
       }))
     });
-
+    console.log("Story created in DB:", story);
     // Start async generation process
     generateStoryAssets(story).catch(error => {
       console.error('Story generation failed:', error);

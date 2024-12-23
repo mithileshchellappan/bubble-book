@@ -1,6 +1,12 @@
 import mongoose from 'mongoose';
 
 const storySchema = new mongoose.Schema({
+  id: {
+    type: String,
+    required: true,
+    unique: true,
+    index: true
+  },
   userId: {
     type: String,
     required: true,
@@ -15,7 +21,12 @@ const storySchema = new mongoose.Schema({
     enum: ['DRAFT', 'GENERATING', 'COMPLETED', 'FAILED'],
     default: 'DRAFT'
   },
+  voice: {
+    id: String,
+    style: String
+  },
   pages: [{
+    id: String,
     text: String,
     audioUrl: String,
     audioStatus: {
@@ -24,6 +35,7 @@ const storySchema = new mongoose.Schema({
       default: 'PENDING'
     },
     panels: [{
+      id: String,
       imagePrompt: String,
       imageUrl: String,
       imageStatus: {
@@ -39,6 +51,14 @@ const storySchema = new mongoose.Schema({
     default: Date.now
   },
   completedAt: Date
+});
+
+storySchema.set('toJSON', {
+  transform: (doc, ret) => {
+    delete ret._id;
+    delete ret.__v;
+    return ret;
+  }
 });
 
 export const Story = mongoose.model('Story', storySchema);
