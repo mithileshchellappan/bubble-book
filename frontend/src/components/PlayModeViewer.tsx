@@ -14,6 +14,7 @@ export const PlayModeViewer: React.FC = () => {
   const { id } = useParams();
   const { currentStory, fetchStoryById, currentPage } = useStoryStore();
   const audioRef = useRef<HTMLAudioElement>(null);
+  let mouseTimer = useRef<NodeJS.Timeout>();
 
   useEffect(() => {
     if (id) {
@@ -94,11 +95,42 @@ export const PlayModeViewer: React.FC = () => {
     useStoryStore.getState().previousPage();
   };
 
+  const handleMouseMove = () => {
+    setShowControls(true);
+    
+    // Clear existing timer
+    if (mouseTimer.current) {
+      clearTimeout(mouseTimer.current);
+    }
+    
+    // Set new timer to hide controls after 2 seconds of no movement
+    mouseTimer.current = setTimeout(() => {
+      setShowControls(false);
+    }, 2000);
+  };
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (mouseTimer.current) {
+        clearTimeout(mouseTimer.current);
+      }
+    };
+  }, []);
+
+  const handleAudioEnd = () => {
+    setIsAudioPlaying(false);
+    
+    // Check if there's a next page before advancing
+    if (currentPage < currentStory.pages.length - 1) {
+      handleNextPage();
+    }
+  };
+
   return (
     <div 
       className="fixed inset-0 bg-black"
-      onMouseMove={() => setShowControls(true)}
-      onMouseLeave={() => setShowControls(false)}
+      onMouseMove={handleMouseMove}
     >
       <AnimatePresence>
         {showControls && (
@@ -147,7 +179,7 @@ export const PlayModeViewer: React.FC = () => {
         <audio
           ref={audioRef}
           src={currentPageData.audioUrl}
-          onEnded={() => setIsAudioPlaying(false)}
+          onEnded={handleAudioEnd}
           onError={() => setIsAudioPlaying(false)}
           className="hidden"
         />
