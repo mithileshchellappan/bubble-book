@@ -54,8 +54,8 @@ export const EditMode: React.FC<EditModeProps> = ({ page, onUpdatePage }) => {
           <div 
             key={panel.id} 
             className="relative group"
-            onMouseEnter={() => setHoveredPanel(panel.id)}
-            onMouseLeave={() => setHoveredPanel(null)}
+            // onMouseEnter={() => setHoveredPanel(panel.id)}
+            // onMouseLeave={() => setHoveredPanel(null)}
           >
             <div className="aspect-video rounded-xl overflow-hidden shadow-lg relative">
               <img

@@ -1,101 +1,84 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Wand2, Clock } from 'lucide-react';
+import { Loader2, Home } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useStoryStore } from '../stores/useStoryStore';
-
-const IMAGES_BEFORE_COOLDOWN = 3;
-const COOLDOWN_SECONDS = 30;
+import { usePresetVoiceStore } from '../stores/usePresetVoiceStore';
 
 interface StoryGenerationProgressProps {
+  draft: any;
+  voiceId: string;
+  voiceStyle: string;
   onComplete: () => void;
 }
 
-export const StoryGenerationProgress: React.FC<StoryGenerationProgressProps> = ({ onComplete }) => {
-  const [progress, setProgress] = useState(0);
-  const [cooldownTime, setCooldownTime] = useState(0);
-  const { currentDraft } = useStoryStore();
-  const [imagesGenerated, setImagesGenerated] = useState(0);
+export const StoryGenerationProgress: React.FC<StoryGenerationProgressProps> = ({
+  draft,
+  voiceId,
+  voiceStyle,
+  onComplete
+}) => {
+  const navigate = useNavigate();
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const generateFullStory = useStoryStore(state => state.generateFullStory);
 
-  useEffect(() => {
-    if (!currentDraft) return;
+  const hasStartedGeneration = useRef(false);
 
-    const totalPanels = currentDraft.pages.reduce((acc, page) => acc + page.panels.length, 0);
-    const progressPerPanel = 100 / totalPanels;
-    let completedPanels = 0;
+  React.useEffect(() => {
+    const generateStory = async () => {
+      if (hasStartedGeneration.current) return;
+      hasStartedGeneration.current = true;
 
-    const generateImages = async () => {
-      for (const page of currentDraft.pages) {
-        for (const panel of page.panels) {
-          if (imagesGenerated >= IMAGES_BEFORE_COOLDOWN) {
-            // Start cooldown
-            setCooldownTime(COOLDOWN_SECONDS);
-            const cooldownInterval = setInterval(() => {
-              setCooldownTime(prev => {
-                if (prev <= 1) {
-                  clearInterval(cooldownInterval);
-                  setImagesGenerated(0);
-                  return 0;
-                }
-                return prev - 1;
-              });
-            }, 1000);
-
-            // Wait for cooldown
-            await new Promise(resolve => setTimeout(resolve, COOLDOWN_SECONDS * 1000));
-          }
-
-          await fetch('http://localhost:4000/api/images/generate', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${await window.Clerk?.session?.getToken()}`
-            },
-            body: JSON.stringify({ prompt: panel.imagePrompt })
-          });
-
-          completedPanels++;
-          setImagesGenerated(prev => prev + 1);
-          setProgress(Math.round(completedPanels * progressPerPanel));
-        }
+      try {
+        await generateFullStory();
+        setIsSubmitted(true);
+        onComplete();
+      } catch (error) {
+        console.error('Failed to generate story:', error);
       }
-      onComplete();
     };
 
-    generateImages();
-  }, [currentDraft, onComplete]);
+    generateStory();
+  }, [generateFullStory]);
+
+  const handleGoToLibrary = () => {
+    useStoryStore.setState({ currentDraft: null });
+    usePresetVoiceStore.setState({ selectedVoice: null, selectedStyle: '' });
+    navigate('/library');
+  };
 
   return (
-    <div className="fixed inset-0 bg-purple-900/50 backdrop-blur-sm flex items-center justify-center">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="bg-white rounded-xl p-8 max-w-md w-full mx-4 shadow-2xl"
-      >
-        <div className="flex items-center justify-center mb-6">
-          {cooldownTime > 0 ? (
-            <Clock className="w-8 h-8 text-orange-500" />
-          ) : (
-            <Wand2 className="w-8 h-8 text-purple-600 animate-pulse" />
-          )}
-        </div>
-        <h2 className="text-xl font-bold text-center mb-2">
-          {cooldownTime > 0 ? 'Cooling Down...' : 'Generating Your Story'}
-        </h2>
-        <p className="text-gray-600 text-center mb-6">
-          {cooldownTime > 0 
-            ? `Waiting ${cooldownTime}s before generating more images...` 
-            : 'Please wait while we create your magical story...'}
-        </p>
-        
-        <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
-          <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: `${progress}%` }}
-            className="bg-gradient-to-r from-purple-600 to-blue-500 h-2 rounded-full"
-          />
-        </div>
-        <p className="text-sm text-gray-500 text-center">{progress}% complete</p>
-      </motion.div>
-    </div>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="max-w-xl mx-auto p-8 text-center"
+    >
+      <Loader2 className="w-12 h-12 text-purple-600 animate-spin mx-auto mb-6" />
+      <h2 className="text-2xl font-bold text-gray-900 mb-4">Creating Your Story</h2>
+      <p className="text-gray-600">
+        We're working on bringing your story to life with beautiful images and narration. 
+        This process may take a few minutes.
+      </p>
+      <p className="text-gray-600 mt-4">
+        You can check the progress in your story library.
+      </p>
+
+      {isSubmitted && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-8"
+        >
+          <button
+            onClick={handleGoToLibrary}
+            className="inline-flex items-center gap-2 px-6 py-3 bg-purple-600 
+                     text-white rounded-lg hover:bg-purple-700 transition-colors"
+          >
+            <Home className="w-5 h-5" />
+            Go to Library
+          </button>
+        </motion.div>
+      )}
+    </motion.div>
   );
 }; 

@@ -2,7 +2,7 @@ import { dalle } from './openai.js';
 
 export const generateDalleImage = async (prompt) => {
   try {
-    console.log("Generating image with prompt:", prompt);
+    // console.log("Generating image with prompt:", prompt);
     return 'https://placehold.co/1024x1024/purple/white?text=Image+Generation+Failed';
     const response = await dalle.images.generate({
       model: "dall-e-3",

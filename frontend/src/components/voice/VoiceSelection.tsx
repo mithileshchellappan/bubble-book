@@ -12,6 +12,9 @@ export const VoiceSelection: React.FC<VoiceSelectionProps> = ({
   onBack
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const voicesPerPage = 4;
+
   const { 
     voices, 
     selectedVoice, 
@@ -21,6 +24,11 @@ export const VoiceSelection: React.FC<VoiceSelectionProps> = ({
     setSelectedVoice, 
     setSelectedStyle 
   } = usePresetVoiceStore();
+
+  // Load voices when the component mounts
+  useEffect(() => {
+    loadVoices();
+  }, [loadVoices]);
 
   const filteredVoices = voices.filter(voice => {
     const searchLower = searchQuery.toLowerCase();
@@ -36,12 +44,24 @@ export const VoiceSelection: React.FC<VoiceSelectionProps> = ({
     );
   });
 
-  React.useEffect(() => {
-    loadVoices();
-  }, [loadVoices]);
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredVoices.length / voicesPerPage);
+  const startIndex = (currentPage - 1) * voicesPerPage;
+  const paginatedVoices = filteredVoices.slice(startIndex, startIndex + voicesPerPage);
+
+  // Reset to first page when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
+
+  const handleCreateStory = () => {
+    if (selectedVoice) {
+      onConfirm(selectedVoice.id, selectedStyle);
+    }
+  };
 
   return (
-    <div>
+    <div className="flex flex-col h-full">
       <h2 className="text-xl font-semibold text-gray-900 mb-6">Choose a Voice for Your Story</h2>
 
       {/* Search Bar */}
@@ -58,21 +78,48 @@ export const VoiceSelection: React.FC<VoiceSelectionProps> = ({
       </div>
 
       {/* Voice Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-        {filteredVoices.map((voice) => (
-          <VoiceCard
-            key={voice.id}
-            voice={voice}
-            isSelected={selectedVoice?.id === voice.id}
-            selectedStyle={selectedStyle}
-            onSelect={() => setSelectedVoice(voice)}
-            onStyleSelect={setSelectedStyle}
-          />
-        ))}
+      <div className="flex-1 overflow-y-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          {paginatedVoices.map((voice) => (
+            <VoiceCard
+              key={voice.id}
+              voice={voice}
+              isSelected={selectedVoice?.id === voice.id}
+              selectedStyle={selectedStyle}
+              onSelect={() => setSelectedVoice(voice)}
+              onStyleSelect={setSelectedStyle}
+            />
+          ))}
+        </div>
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="flex justify-center items-center gap-2 mb-4">
+            <button
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-50 
+                       disabled:cursor-not-allowed transition-colors"
+            >
+              Previous
+            </button>
+            <span className="text-sm text-gray-600">
+              Page {currentPage} of {totalPages}
+            </span>
+            <button
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-50 
+                       disabled:cursor-not-allowed transition-colors"
+            >
+              Next
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Footer */}
-      <div className="flex justify-end gap-3 mt-8 pt-6 border-t">
+      <div className="flex justify-end gap-3 pt-6 border-t bg-white">
         <button
           onClick={onBack}
           className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
@@ -80,11 +127,7 @@ export const VoiceSelection: React.FC<VoiceSelectionProps> = ({
           Back
         </button>
         <button
-          onClick={() => {
-            if (selectedVoice) {
-              onConfirm(selectedVoice.id, selectedStyle);
-            }
-          }}
+          onClick={handleCreateStory}
           disabled={!selectedVoice}
           className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 
                     disabled:bg-purple-300 disabled:cursor-not-allowed transition-colors"
@@ -96,21 +139,23 @@ export const VoiceSelection: React.FC<VoiceSelectionProps> = ({
   );
 };
 
-interface VoiceCardProps {
-  voice: {
-    id: string;
+interface Voice {
+  id: string;
+  name: string;
+  gender: string;
+  description: string;
+  styles: string[];
+  sampleAudioUrl: string;
+  voiceTags: {
     name: string;
-    gender: string;
-    description: string;
-    styles: string[];
-    sampleAudioUrl: string;
-    voiceTags: {
-      name: string;
-      tags: string[];
-    }[];
-    personality: string;
-    scenarios: string;
-  };
+    tags: string[];
+  }[];
+  personality: string;
+  scenarios: string;
+}
+
+interface VoiceCardProps {
+  voice: Voice;
   isSelected: boolean;
   selectedStyle: string;
   onSelect: () => void;

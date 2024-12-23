@@ -6,10 +6,6 @@ import { Chip } from './ui/Chip';
 import { genreEmojis, themeEmojis } from '../constants/genres';
 import { motion } from 'framer-motion';
 import { StoryDraftPreview } from './StoryDraftPreview';
-import { VoiceSelector } from './voice/VoiceSelector';
-import { presetVoices } from '../constants/voices';
-import { Voice } from '../types/voice';
-import { useVoiceStore } from '../stores/useVoiceStore';
 
 const genres: Genre[] = ['fantasy', 'adventure', 'educational', 'bedtime', 'fairy-tale'];
 const themes: Theme[] = ['nature', 'animals', 'space', 'ocean', 'friendship', 'family'];
@@ -19,8 +15,6 @@ export const StoryGenerator: React.FC = () => {
   const [selectedGenre, setSelectedGenre] = useState<Genre | null>(null);
   const [selectedTheme, setSelectedTheme] = useState<Theme | null>(null);
   const [pageCount, setPageCount] = useState(3);
-  const [selectedVoice, setSelectedVoice] = useState<Voice | undefined>();
-  const { customVoices } = useVoiceStore();
   const { 
     generateDraft, 
     generateFullStory,
@@ -132,18 +126,6 @@ export const StoryGenerator: React.FC = () => {
             />
           ))}
         </div>
-      </div>
-
-      <div className="mb-8">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Narration Voice
-        </label>
-        <VoiceSelector
-          selectedVoice={selectedVoice}
-          onVoiceSelect={setSelectedVoice}
-          customVoices={customVoices}
-          presetVoices={presetVoices}
-        />
       </div>
 
       <motion.button

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { Story, StoryDraft } from '../types/story';
+import { usePresetVoiceStore } from './usePresetVoiceStore';
 
 interface StoryStore {
   stories: Story[];
@@ -7,6 +8,9 @@ interface StoryStore {
   currentStory: Story | null;
   isDraftGenerating: boolean;
   isGenerating: boolean;
+  currentPage: number;
+  error: string | null;
+  isLoading: boolean;
   
   generateDraft: (prompt: string, genre: string, theme: string, pageCount: number) => Promise<void>;
   generateFullStory: () => Promise<void>;
@@ -16,6 +20,8 @@ interface StoryStore {
   nextPage: () => void;
   setCurrentStory: (story: Story) => void;
   updatePanelImage: (pageId: string, panelId: string, newImageUrl: string) => void;
+  fetchStories: () => Promise<void>;
+  fetchStoryById: (id: string) => Promise<void>;
 }
 
 export const useStoryStore = create<StoryStore>((set, get) => ({
@@ -24,6 +30,9 @@ export const useStoryStore = create<StoryStore>((set, get) => ({
   currentStory: null,
   isDraftGenerating: false,
   isGenerating: false,
+  currentPage: 0,
+  error: null,
+  isLoading: false,
 
   generateDraft: async (prompt, genre, theme, pageCount) => {
     set({ isDraftGenerating: true });
@@ -53,43 +62,26 @@ export const useStoryStore = create<StoryStore>((set, get) => ({
 
     set({ isGenerating: true });
     try {
-      const pagesWithImages = await Promise.all(currentDraft.pages.map(async (page, pageIndex) => {
-        const panels = await Promise.all(page.panels.map(async (panel, panelIndex) => {
-          const imageUrl = await fetch('http://localhost:4000/api/images/generate', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${await window.Clerk?.session?.getToken()}`
-            },
-            body: JSON.stringify({ prompt: panel.imagePrompt })
-          }).then(res => res.json()).then(data => data.imageUrl);
+      const token = await window.Clerk?.session?.getToken();
+      const response = await fetch('http://localhost:4000/api/stories/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          draft: currentDraft,
+          voiceId: usePresetVoiceStore.getState().selectedVoice?.id,
+          voiceStyle: usePresetVoiceStore.getState().selectedStyle
+        })
+      });
 
-          return {
-            ...panel,
-            id: `panel-${pageIndex}-${panelIndex}`,
-            imageUrl,
-            order: panelIndex
-          };
-        }));
+      const data = await response.json();
+      if (!data.storyId) {
+        throw new Error('Failed to generate story');
+      }
 
-        return {
-          ...page,
-          id: `page-${pageIndex}`,
-          panels
-        };
-      }));
-
-      const story: Story = {
-        id: Date.now().toString(),
-        title: currentDraft.title,
-        pages: pagesWithImages,
-        currentPage: 0,
-        createdAt: new Date(),
-        genre: currentDraft.genre,
-        theme: currentDraft.theme
-      };
-
-      set({ currentStory: story, stories: [story, ...get().stories], currentDraft: null });
+      return data.storyId;
     } finally {
       set({ isGenerating: false });
     }
@@ -109,15 +101,17 @@ export const useStoryStore = create<StoryStore>((set, get) => ({
   },
 
   previousPage: () => {
-    const { currentStory } = get();
-    if (!currentStory || currentStory.currentPage <= 0) return;
-    set({ currentStory: { ...currentStory, currentPage: currentStory.currentPage - 1 } });
+    const { currentPage } = get();
+    if (currentPage > 0) {
+      set({ currentPage: currentPage - 1 });
+    }
   },
 
   nextPage: () => {
-    const { currentStory } = get();
-    if (!currentStory || currentStory.currentPage >= currentStory.pages.length - 1) return;
-    set({ currentStory: { ...currentStory, currentPage: currentStory.currentPage + 1 } });
+    const { currentPage, currentStory } = get();
+    if (currentStory && currentPage < currentStory.pages.length - 1) {
+      set({ currentPage: currentPage + 1 });
+    }
   },
 
   setCurrentStory: (story: Story) => set({ currentStory: story }),
@@ -136,5 +130,50 @@ export const useStoryStore = create<StoryStore>((set, get) => ({
     );
 
     set({ currentStory: { ...currentStory, pages: updatedPages } });
+  },
+
+  fetchStories: async () => {
+    set({ isLoading: true });
+    try {
+      const token = await window.Clerk?.session?.getToken();
+      const response = await fetch('http://localhost:4000/api/stories', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) throw new Error('Failed to fetch stories');
+      const data = await response.json();
+      set({ stories: data });
+    } catch (error) {
+      console.error('Error fetching stories:', error);
+      set({ error: 'Failed to load stories' });
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  fetchStoryById: async (id: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const token = await window.Clerk?.session?.getToken();
+      const response = await fetch(`http://localhost:4000/api/stories/${id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) throw new Error('Failed to fetch story');
+      const data = await response.json();
+      set({ 
+        currentStory: data,
+        currentPage: 0
+      });
+    } catch (error) {
+      console.error('Error fetching story:', error);
+      set({ error: 'Failed to load story' });
+    } finally {
+      set({ isLoading: false });
+    }
   }
 }));

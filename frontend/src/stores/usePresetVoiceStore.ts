@@ -11,9 +11,8 @@ interface Voice {
     name: string;
     tags: string[];
   }[];
-  isMultilingual: boolean;
-  voiceType: string;
-  locale: string;
+  personality: string;
+  scenarios: string;
 }
 
 interface PresetVoiceStore {

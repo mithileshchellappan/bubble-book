@@ -1,12 +1,22 @@
 export interface Story {
   id: string;
   title: string;
-  genre: string;
-  theme: string;
-  prompt?: string;
+  status: 'DRAFT' | 'GENERATING' | 'COMPLETED' | 'FAILED';
+  pages: Array<{
+    id: string;
+    text: string;
+    audioUrl?: string;
+    audioStatus: 'PENDING' | 'GENERATED' | 'FAILED';
+    panels: Array<{
+      id: string;
+      imagePrompt: string;
+      imageUrl?: string;
+      imageStatus: 'PENDING' | 'GENERATED' | 'FAILED';
+      order: number;
+    }>;
+  }>;
   createdAt: Date;
-  pages: StoryPage[];
-  currentPage: number;
+  completedAt?: Date;
 }
 
 export interface StoryPage {

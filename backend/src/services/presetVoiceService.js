@@ -73,6 +73,7 @@ export const synthesizeSpeech = async (text, voiceId, style = '') => {
 // Get available voices using SDK
 export const getAvailableVoices = async () => {
   try {
+    console.log('Getting available voices');
     const synthesizer = new sdk.SpeechSynthesizer(speechConfig);
     const result = await synthesizer.getVoicesAsync();
     synthesizer.close();

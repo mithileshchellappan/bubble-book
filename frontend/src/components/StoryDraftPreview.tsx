@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { useStoryStore } from '../stores/useStoryStore';
 import { StoryGenerationProgress } from './StoryGenerationProgress';
 import { VoiceSelection } from './voice/VoiceSelection';
+import { usePresetVoiceStore } from '../stores/usePresetVoiceStore';
 
 interface StoryDraftPreviewProps {
   draft: StoryDraft;
@@ -23,24 +24,25 @@ export const StoryDraftPreview: React.FC<StoryDraftPreviewProps> = ({
   const [showProgress, setShowProgress] = useState(false);
   const [showVoiceSelection, setShowVoiceSelection] = useState(false);
   const navigate = useNavigate();
+  const { selectedVoice, selectedStyle } = usePresetVoiceStore();
 
   const handleApproveClick = () => {
     setShowVoiceSelection(true);
   };
 
   const handleVoiceSelect = async (voiceId: string, style: string) => {
+    setShowVoiceSelection(false);
     setShowProgress(true);
-    await onApprove();
-    setTimeout(() => {
-      const storyId = useStoryStore.getState().currentStory?.id;
-      if (storyId) {
-        navigate(`/story/${storyId}`);
-      }
-    }, 100);
   };
 
   if (showProgress) {
-    return <StoryGenerationProgress onComplete={() => setShowProgress(false)} />;
+    return (
+      <StoryGenerationProgress 
+        draft={draft}
+        voiceId={selectedVoice?.id || ''}
+        voiceStyle={selectedStyle}
+      />
+    );
   }
 
   if (showVoiceSelection) {
@@ -49,17 +51,7 @@ export const StoryDraftPreview: React.FC<StoryDraftPreviewProps> = ({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="max-w-5xl mx-auto p-8 bg-white rounded-2xl shadow-xl"
-      >
-        <div className="mb-6">
-          <button 
-            onClick={() => setShowVoiceSelection(false)}
-            className="text-gray-600 hover:text-gray-900 flex items-center gap-2"
-          >
-            <ChevronLeft className="w-5 h-5" />
-            Back to Preview
-          </button>
-        </div>
-        
+      >        
         <VoiceSelection 
           onConfirm={handleVoiceSelect}
           onBack={() => setShowVoiceSelection(false)}

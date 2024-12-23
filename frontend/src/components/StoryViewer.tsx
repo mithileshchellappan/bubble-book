@@ -6,14 +6,21 @@ import { Navigation } from './Navigation';
 import { X, Maximize2, Minimize2, Play } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useViewModeStore } from '../stores/useViewModeStore';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 export const StoryViewer: React.FC = () => {
   const { mode: viewMode, setMode: setViewMode } = useViewModeStore();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(false);
-  const { currentStory, updatePage } = useStoryStore();
+  const { currentStory, fetchStoryById, currentPage } = useStoryStore();
   const navigate = useNavigate();
+  const { id } = useParams();
+
+  useEffect(() => {
+    if (id) {
+      fetchStoryById(id);
+    }
+  }, [id, fetchStoryById]);
 
   const toggleFullscreen = useCallback(async () => {
     if (!document.fullscreenElement) {
@@ -41,7 +48,7 @@ export const StoryViewer: React.FC = () => {
     return null;
   }
 
-  const currentPageData = currentStory.pages[currentStory.currentPage];
+  const currentPageData = currentStory.pages[currentPage];
 
   const handlePlayAudio = () => {
     console.log('Playing audio for page:', currentPageData.id);
@@ -86,7 +93,7 @@ export const StoryViewer: React.FC = () => {
 
         <AnimatePresence initial={false} mode="wait">
           <motion.div
-            key={currentStory.currentPage}
+            key={currentPage}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -105,8 +112,8 @@ export const StoryViewer: React.FC = () => {
           <Navigation
             onPrevious={() => useStoryStore.getState().previousPage()}
             onNext={() => useStoryStore.getState().nextPage()}
-            canGoPrevious={currentStory.currentPage > 0}
-            canGoNext={currentStory.currentPage < currentStory.pages.length - 1}
+            canGoPrevious={currentPage > 0}
+            canGoNext={currentPage < currentStory.pages.length - 1}
             theme="dark"
           />
         </div>
@@ -135,7 +142,7 @@ export const StoryViewer: React.FC = () => {
       </header>
 
       <main className="py-8">
-        <EditMode page={currentPageData} onUpdatePage={updatePage} />
+        <EditMode page={currentPageData} onUpdatePage={useStoryStore.getState().updatePage} />
       </main>
     </div>
   );

@@ -1,22 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { StoryPage } from '../../types/story';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Volume2, VolumeX, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useStoryStore } from '../../stores/useStoryStore';
 
 interface PlayModeProps {
   page: StoryPage;
-  onPlayAudio: () => void;
   onExit: () => void;
 }
 
-export const PlayMode: React.FC<PlayModeProps> = ({ page, onPlayAudio }) => {
-  const [isMuted, setIsMuted] = useState(false);
+export const PlayMode: React.FC<PlayModeProps> = ({ page, onExit }) => {
   const [showControls, setShowControls] = useState(false);
-  const { currentStory } = useStoryStore();
+  const { currentPage, currentStory } = useStoryStore();
 
-  const canGoNext = currentStory && currentStory.currentPage < currentStory.pages.length - 1;
-  const canGoPrevious = currentStory && currentStory.currentPage > 0;
+  const canGoNext = currentStory && currentPage < currentStory.pages.length - 1;
+  const canGoPrevious = currentStory && currentPage > 0;
 
   const handleNext = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -31,12 +29,6 @@ export const PlayMode: React.FC<PlayModeProps> = ({ page, onPlayAudio }) => {
       useStoryStore.getState().previousPage();
     }
   };
-
-  useEffect(() => {
-    if (!isMuted) {
-      onPlayAudio();
-    }
-  }, [page.id, isMuted, onPlayAudio]);
 
   return (
     <div 
@@ -121,15 +113,7 @@ export const PlayMode: React.FC<PlayModeProps> = ({ page, onPlayAudio }) => {
 
       {/* Top Controls */}
       <div className="absolute top-4 left-4 flex gap-2 z-50">
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            setIsMuted(!isMuted);
-          }}
-          className="p-2 rounded-full bg-black/20 hover:bg-black/30 text-white transition-colors"
-        >
-          {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-        </button>
+        {/* Audio button removed */}
       </div>
     </div>
   );
