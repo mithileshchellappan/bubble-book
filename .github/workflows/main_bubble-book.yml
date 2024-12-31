@@ -47,7 +47,7 @@ jobs:
           name: frontend-build
           path: |
             frontend/dist
-            frontend/staticwebapp.config.json
+            frontend/web.config
           retention-days: 1
 
   deploy:
