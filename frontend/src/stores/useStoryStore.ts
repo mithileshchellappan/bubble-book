@@ -37,7 +37,7 @@ export const useStoryStore = create<StoryStore>((set, get) => ({
   generateDraft: async (prompt, genre, theme, pageCount) => {
     set({ isDraftGenerating: true });
     try {
-      const response = await fetch('http://localhost:4000/api/stories/draft', {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/stories/draft`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -63,7 +63,7 @@ export const useStoryStore = create<StoryStore>((set, get) => ({
     set({ isGenerating: true });
     try {
       const token = await window.Clerk?.session?.getToken();
-      const response = await fetch('http://localhost:4000/api/stories/generate', {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/stories/generate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -136,7 +136,7 @@ export const useStoryStore = create<StoryStore>((set, get) => ({
     set({ isLoading: true });
     try {
       const token = await window.Clerk?.session?.getToken();
-      const response = await fetch('http://localhost:4000/api/stories', {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/stories`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -157,7 +157,7 @@ export const useStoryStore = create<StoryStore>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const token = await window.Clerk?.session?.getToken();
-      const response = await fetch(`http://localhost:4000/api/stories/${id}`, {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/stories/${id}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

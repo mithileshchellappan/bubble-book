@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Volume2, Heart, Check, Search } from 'lucide-react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
+import { Volume2, Heart, Check, Search, Loader2, Star } from 'lucide-react';
 import { usePresetVoiceStore } from '../../stores/usePresetVoiceStore';
 
 interface VoiceSelectionProps {
@@ -13,6 +13,7 @@ export const VoiceSelection: React.FC<VoiceSelectionProps> = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [favoriteUpdate, setFavoriteUpdate] = useState(0);
   const voicesPerPage = 4;
 
   const { 
@@ -30,19 +31,30 @@ export const VoiceSelection: React.FC<VoiceSelectionProps> = ({
     loadVoices();
   }, [loadVoices]);
 
-  const filteredVoices = voices.filter(voice => {
-    const searchLower = searchQuery.toLowerCase();
-    return (
-      voice.name.toLowerCase().includes(searchLower) ||
-      (voice.description || '').toLowerCase().includes(searchLower) ||
-      (voice.personality || '').toLowerCase().includes(searchLower) ||
-      (voice.scenarios || '').toLowerCase().includes(searchLower) ||
-      (voice.styles || []).some(style => style.toLowerCase().includes(searchLower)) ||
-      (voice.voiceTags || []).some(tagGroup => 
-        (tagGroup.tags || []).some(tag => tag.toLowerCase().includes(searchLower))
-      )
-    );
-  });
+  const filteredVoices = useMemo(() => {
+    return voices
+      .filter(voice => {
+        const searchLower = searchQuery.toLowerCase();
+        return (
+          voice.name.toLowerCase().includes(searchLower) ||
+          (voice.description || '').toLowerCase().includes(searchLower) ||
+          (voice.personality || '').toLowerCase().includes(searchLower) ||
+          (voice.scenarios || '').toLowerCase().includes(searchLower) ||
+          (voice.styles || []).some(style => style.toLowerCase().includes(searchLower)) ||
+          (voice.voiceTags || []).some(tagGroup => 
+            (tagGroup.tags || []).some(tag => tag.toLowerCase().includes(searchLower))
+          )
+        );
+      })
+      .sort((a, b) => {
+        const favorites = JSON.parse(localStorage.getItem('favoriteVoices') || '[]');
+        const aIsFavorite = favorites.includes(a.id);
+        const bIsFavorite = favorites.includes(b.id);
+        if (aIsFavorite && !bIsFavorite) return -1;
+        if (!aIsFavorite && bIsFavorite) return 1;
+        return 0;
+      });
+  }, [voices, searchQuery, favoriteUpdate]);
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredVoices.length / voicesPerPage);
@@ -77,46 +89,54 @@ export const VoiceSelection: React.FC<VoiceSelectionProps> = ({
         />
       </div>
 
-      {/* Voice Grid */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          {paginatedVoices.map((voice) => (
-            <VoiceCard
-              key={voice.id}
-              voice={voice}
-              isSelected={selectedVoice?.id === voice.id}
-              selectedStyle={selectedStyle}
-              onSelect={() => setSelectedVoice(voice)}
-              onStyleSelect={setSelectedStyle}
-            />
-          ))}
+      {/* Loading Indicator */}
+      {isLoading ? (
+        <div className="flex items-center justify-center h-full">
+          <Loader2 className="w-8 h-8 text-purple-600 animate-spin" />
         </div>
-
-        {/* Pagination Controls */}
-        {totalPages > 1 && (
-          <div className="flex justify-center items-center gap-2 mb-4">
-            <button
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-              className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-50 
-                       disabled:cursor-not-allowed transition-colors"
-            >
-              Previous
-            </button>
-            <span className="text-sm text-gray-600">
-              Page {currentPage} of {totalPages}
-            </span>
-            <button
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-              className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-50 
-                       disabled:cursor-not-allowed transition-colors"
-            >
-              Next
-            </button>
+      ) : (
+        <div className="flex-1 overflow-y-auto">
+          {/* Voice Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            {paginatedVoices.map((voice) => (
+              <VoiceCard
+                key={voice.id}
+                voice={voice}
+                isSelected={selectedVoice?.id === voice.id}
+                selectedStyle={selectedStyle}
+                onSelect={() => setSelectedVoice(voice)}
+                onStyleSelect={setSelectedStyle}
+                onFavoriteChange={() => setFavoriteUpdate(prev => prev + 1)}
+              />
+            ))}
           </div>
-        )}
-      </div>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex justify-center items-center gap-2 mb-4">
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-50 
+                         disabled:cursor-not-allowed transition-colors"
+              >
+                Previous
+              </button>
+              <span className="text-sm text-gray-600">
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-50 
+                         disabled:cursor-not-allowed transition-colors"
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Footer */}
       <div className="flex justify-end gap-3 pt-6 border-t bg-white">
@@ -160,6 +180,7 @@ interface VoiceCardProps {
   selectedStyle: string;
   onSelect: () => void;
   onStyleSelect: (style: string) => void;
+  onFavoriteChange: () => void;
 }
 
 const VoiceCard: React.FC<VoiceCardProps> = ({
@@ -167,7 +188,8 @@ const VoiceCard: React.FC<VoiceCardProps> = ({
   isSelected,
   selectedStyle,
   onSelect,
-  onStyleSelect
+  onStyleSelect,
+  onFavoriteChange
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [showAllTags, setShowAllTags] = useState(false);
@@ -213,6 +235,27 @@ const VoiceCard: React.FC<VoiceCardProps> = ({
   // Format strings to add spaces after commas
   const formattedPersonality = voice.personality?.replace(/,/g, ', ');
   const formattedScenarios = voice.scenarios?.replace(/,/g, ', ');
+
+  // Load favorite voices from local storage
+  const isFavorite = () => {
+    const favorites = JSON.parse(localStorage.getItem('favoriteVoices') || '[]');
+    return favorites.includes(voice.id);
+  };
+
+  // Handle favorite toggle
+  const toggleFavorite = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const favorites = JSON.parse(localStorage.getItem('favoriteVoices') || '[]');
+    
+    if (isFavorite()) {
+      const updatedFavorites = favorites.filter((id: string) => id !== voice.id);
+      localStorage.setItem('favoriteVoices', JSON.stringify(updatedFavorites));
+    } else {
+      favorites.push(voice.id);
+      localStorage.setItem('favoriteVoices', JSON.stringify(favorites));
+    }
+    onFavoriteChange();
+  };
 
   return (
     <div 
@@ -263,7 +306,7 @@ const VoiceCard: React.FC<VoiceCardProps> = ({
             )}
           </div>
         </div>
-        <div className="flex items-center gap-2 ml-4">
+        <div className="flex items-center gap-2">
           <button
             onClick={handlePlayAudio}
             className={`p-2 rounded-full transition-colors ${
@@ -271,6 +314,13 @@ const VoiceCard: React.FC<VoiceCardProps> = ({
             }`}
           >
             <Volume2 className={`w-5 h-5 ${isPlaying ? 'animate-pulse' : ''}`} />
+          </button>
+          <button
+            onClick={toggleFavorite}
+            className={`p-2 rounded-full transition-colors hover:bg-gray-100
+              ${isFavorite() ? 'text-yellow-500' : 'text-gray-400'}`}
+          >
+            <Star className="w-5 h-5" />
           </button>
         </div>
       </div>

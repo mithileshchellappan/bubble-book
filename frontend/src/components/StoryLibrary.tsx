@@ -4,6 +4,7 @@ import { Book, Calendar, Loader2, RefreshCw } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useStoryStore } from '../stores/useStoryStore';
 import { formatDistanceToNow, isToday, isYesterday, format } from 'date-fns';
+import { Story } from '../types/story';
 
 const formatRelativeDate = (date: Date) => {
   if (isToday(date)) {

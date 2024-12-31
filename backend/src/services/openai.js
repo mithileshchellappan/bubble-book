@@ -17,3 +17,10 @@ export const dalle = new AzureOpenAI({
   deployment: 'dall-e-3',
   apiVersion: '2024-02-01'
 }); 
+
+export const dalle2 = new AzureOpenAI({
+  apiKey: process.env.DALLE2_API_KEY,
+  baseURL: process.env.DALLE2_BASE_URL,
+  deployment: 'dall-e-3',
+  apiVersion: '2024-08-01-preview'
+}); 

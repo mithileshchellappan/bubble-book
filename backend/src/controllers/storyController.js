@@ -95,16 +95,17 @@ export const generateStory = async (req, res) => {
 // Separate async function for generation
 async function generateStoryAssets(story) {
   try {
-    // Generate images in batches of 3
+    // Generate images in batches, alternating between DALL-E instances
     for (let pageIndex = 0; pageIndex < story.pages.length; pageIndex++) {
       const page = story.pages[pageIndex];
       const panels = page.panels;
       
-      for (let i = 0; i < panels.length; i += 3) {
-        const batch = panels.slice(i, i + 3);
+      for (let i = 0; i < panels.length; i += 6) {
+        const batch = panels.slice(i, i + 6);
         const batchPromises = batch.map(async (panel, batchIndex) => {
           try {
-            const imageUrl = await generateDalleImage(panel.imagePrompt);
+            const useDalle2 = batchIndex >= 3;
+            const imageUrl = await generateDalleImage(panel.imagePrompt, useDalle2);
             await Story.updateOne(
               { id: story.id, 'pages.panels.imagePrompt': panel.imagePrompt },
               { 
@@ -131,12 +132,11 @@ async function generateStoryAssets(story) {
         });
 
         await Promise.all(batchPromises);
-        if (i + 3 < panels.length) {
-          await new Promise(resolve => setTimeout(resolve, 30000));
+        if (i + 6 < panels.length) {
+          await new Promise(resolve => setTimeout(resolve, 30000)); // 30 second delay between batches
         }
       }
 
-      // Generate audio for the page
       try {
         const audioBuffer = await synthesizeSpeech(page.text, story.voice.id, story.voice.style);
         const fileName = `${story.id}/page-${pageIndex + 1}.wav`;

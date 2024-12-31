@@ -26,7 +26,7 @@ export const useVoiceStore = create<VoiceStore>((set, get) => ({
 
   createVoiceProfile: async (formData: FormData) => {
     try {
-      const response = await fetch('http://localhost:4000/api/voice/create', {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/voice/create`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${await window.Clerk?.session?.getToken()}`
@@ -52,7 +52,7 @@ export const useVoiceStore = create<VoiceStore>((set, get) => ({
 
   deleteVoiceProfile: async (id) => {
     try {
-      const response = await fetch(`http://localhost:4000/api/voice/${id}`, {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/voice/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${await window.Clerk?.session?.getToken()}`
@@ -72,7 +72,7 @@ export const useVoiceStore = create<VoiceStore>((set, get) => ({
 
   loadVoiceProfiles: async () => {
     try {
-      const response = await fetch('http://localhost:4000/api/voice/profiles', {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/voice/profiles`, {
         headers: {
           'Authorization': `Bearer ${await window.Clerk?.session?.getToken()}`
         }
@@ -89,7 +89,7 @@ export const useVoiceStore = create<VoiceStore>((set, get) => ({
 
   checkProfileStatus: async (profileId: string) => {
     try {
-      const response = await fetch(`http://localhost:4000/api/voice/status/${profileId}`, {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/voice/status/${profileId}`, {
         headers: {
           'Authorization': `Bearer ${await window.Clerk?.session?.getToken()}`
         }

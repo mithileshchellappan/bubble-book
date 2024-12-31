@@ -37,7 +37,7 @@ export const usePresetVoiceStore = create<PresetVoiceStore>((set, get) => ({
   loadVoices: async () => {
     try {
       set({ isLoading: true, error: null });
-      const response = await fetch('http://localhost:4000/api/preset-voices/voices');
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/preset-voices/voices`);
       if (!response.ok) throw new Error('Failed to load voices');
       const voices = await response.json();
       set({ voices, isLoading: false });
@@ -55,7 +55,7 @@ export const usePresetVoiceStore = create<PresetVoiceStore>((set, get) => ({
 
     try {
       set({ isLoading: true, error: null });
-      const response = await fetch('http://localhost:4000/api/preset-voices/synthesize', {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/preset-voices/synthesize`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
