@@ -4,7 +4,7 @@ dotenv.config();
 
 const speechConfig = sdk.SpeechConfig.fromSubscription(
   process.env.AZURE_SPEECH_KEY,
-  'westeurope'
+  process.env.AZURE_SPEECH_REGION
 );
 
 export const synthesizeSpeech = async (text, voiceId, style = '') => {
@@ -121,5 +121,3 @@ export const getAvailableVoices = async () => {
     throw error;
   }
 };
-
-getAvailableVoices()
