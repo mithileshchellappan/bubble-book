@@ -23,12 +23,7 @@ jobs:
         with:
           node-version: '20.x'
           cache: 'npm'
-          cache-dependency-path: './frontend/package-lock.json'  # Add cache for faster builds
-
-      - name: List directory contents
-        run: |
-          dir
-          dir frontend
+          cache-dependency-path: './frontend/package-lock.json'
 
       - name: npm install and build
         working-directory: ./frontend
@@ -36,18 +31,21 @@ jobs:
           CI: false
           VITE_CLERK_PUBLISHABLE_KEY: ${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}
           VITE_BACKEND_URL: ${{ secrets.VITE_BACKEND_URL }}
-
         run: |
           npm ci
           npm run build
+          dir dist
+
+      - name: Copy web.config
+        run: |
+          copy frontend\web.config frontend\dist\web.config
+          dir frontend\dist
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: frontend-build
-          path: |
-            frontend/dist
-            frontend/web.config
+          path: frontend/dist
           retention-days: 1
 
   deploy:
@@ -65,7 +63,10 @@ jobs:
         with:
           name: frontend-build
           path: dist
-      
+
+      - name: List deployment files
+        run: ls -la dist
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
