@@ -115,7 +115,7 @@ export const App: React.FC = () => {
   
   if (!clerkPubKey) {
     console.error('Missing Clerk Publishable Key');
-    return <div>Configuration Error</div>;
+    return <div>Configuration Error {Object.keys(import.meta.env).map(key => `${key}: ${import.meta.env[key]}`).join(', ')}</div>;
   }
 
   return (
