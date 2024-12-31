@@ -45,8 +45,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: frontend-build
-          path: frontend/dist
-          retention-days: 1  # Add retention policy for artifacts
+          path: |
+            frontend/dist
+            frontend/staticwebapp.config.json
+          retention-days: 1
 
   deploy:
     runs-on: ubuntu-latest

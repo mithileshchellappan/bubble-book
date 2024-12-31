@@ -9,7 +9,7 @@ import presetVoiceRoutes from './routes/presetVoiceRoutes.js';
 const app = express();
 
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
