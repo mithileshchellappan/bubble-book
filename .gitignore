@@ -9,3 +9,4 @@ node_modules
 AZURE_CLIENT_ID
 AZURE_TENANT_NAME
 .ins
+.vite
