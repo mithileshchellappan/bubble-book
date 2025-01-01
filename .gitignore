@@ -10,3 +10,5 @@ AZURE_CLIENT_ID
 AZURE_TENANT_NAME
 .ins
 .vite
+*/dist
+*.DS_Store
