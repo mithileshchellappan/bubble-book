@@ -29,17 +29,15 @@ jobs:
         working-directory: ./frontend
         env:
           CI: false
-          VITE_CLERK_PUBLISHABLE_KEY: ${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}
-          VITE_BACKEND_URL: ${{ secrets.VITE_BACKEND_URL }}
         run: |
           npm ci
           npm run build
-          dir dist
 
       - name: Copy web.config
+        shell: powershell
         run: |
-          copy frontend\web.config frontend\dist\web.config
-          dir frontend\dist
+          Copy-Item -Path "frontend/web.config" -Destination "frontend/dist/web.config" -Force
+          Get-ChildItem frontend/dist
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
