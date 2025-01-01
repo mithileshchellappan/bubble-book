@@ -34,17 +34,14 @@ jobs:
           npm ci
           npm run build
 
-      - name: Copy web.config
-        shell: powershell
-        run: |
-          Copy-Item -Path "frontend/web.config" -Destination "frontend/dist/web.config" -Force
-          Get-ChildItem frontend/dist
+      - name: Zip artifact for deployment
+        run: Compress-Archive -Path frontend/dist/* -DestinationPath release.zip
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: frontend-build
-          path: frontend/dist
+          path: release.zip
           retention-days: 1
 
   deploy:
@@ -53,30 +50,21 @@ jobs:
     environment:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
-    permissions:
-      id-token: write
 
     steps:
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
           name: frontend-build
-          path: dist
 
-      - name: List deployment files
-        run: ls -la dist
-
-      - name: Login to Azure
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_D761DE352083437BB52BA36A82394C37 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_9D347F263F2B41869F733DAF38D9DA61 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_CF77889EBE574448A76B3BB083341287 }}
+      - name: Unzip artifact for deployment
+        run: unzip release.zip -d dist
 
       - name: Deploy to Azure Web App
-        uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
+        uses: azure/webapps-deploy@v3
         with:
-          app-name: 'bubble-book'
+          app-name: 'bubble-book-test'
           slot-name: 'Production'
+          publish-profile: ${{ secrets.AzureAppService_PublishProfile_90663085029b44b0b28678db6b5c5d61 }}
           package: dist
