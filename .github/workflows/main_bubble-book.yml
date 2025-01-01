@@ -64,7 +64,7 @@ jobs:
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'bubble-book-test'
+          app-name: 'bubble-book'
           slot-name: 'Production'
           publish-profile: ${{ secrets.AzureAppService_PublishProfile_90663085029b44b0b28678db6b5c5d61 }}
           package: dist
