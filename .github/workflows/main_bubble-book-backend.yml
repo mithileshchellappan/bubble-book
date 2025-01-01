@@ -1,4 +1,4 @@
-name: Build and deploy Backend to Azure Web App
+name: Build and deploy Node.js app to Azure Web App - bubble-book-backend
 
 on:
   push:
@@ -29,14 +29,17 @@ jobs:
         working-directory: ./backend
         run: |
           npm ci
+          npm run build --if-present
+
+      - name: Zip artifact for deployment
+        working-directory: ./backend
+        run: zip release.zip ./* -r
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: backend-app
-          path: |
-            backend/*
-            !backend/node_modules
+          path: backend/release.zip
           retention-days: 1
 
   deploy:
@@ -45,28 +48,22 @@ jobs:
     environment:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
-    permissions:
-      id-token: write
 
     steps:
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
           name: backend-app
-          path: .
 
-      - name: Login to Azure
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_4B40EE6FF5BF4EFDA37C94B600461BFF }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_B39C7FDB4BE6418181DA6F0E9B0C0FF1 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_2B4F45A8CB1A4E999FA17917166F2011 }}
+      - name: Unzip artifact for deployment
+        run: unzip release.zip
 
-      - name: 'Deploy to Azure Web App'
-        uses: azure/webapps-deploy@v3
+      - name: Deploy to Azure Web App
         id: deploy-to-webapp
+        uses: azure/webapps-deploy@v3
         with:
           app-name: 'bubble-book-backend'
           slot-name: 'Production'
           package: .
+          publish-profile: ${{ secrets.AzureAppService_PublishProfile_b79f2fccc4ae4668be94545ff0014e5a }}
           
