@@ -19,13 +19,13 @@ export const UserMenu: React.FC = () => {
 
   return (
     <div className="flex items-center gap-4">
-      <button 
+      {/* <button 
         onClick={() => navigate('/voice-profile')}
         className="flex items-center gap-2 text-gray-600 hover:text-purple-600"
       >
         <Mic className="w-4 h-4" />
         Voice Profiles
-      </button>
+      </button> */}
       <UserButton afterSignOutUrl="/sign-in" />
     </div>
   );
