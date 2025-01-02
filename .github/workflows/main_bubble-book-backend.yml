@@ -31,6 +31,7 @@ jobs:
           path: |
             ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}/*
             !${{ env.AZURE_WEBAPP_PACKAGE_PATH }}/node_modules
+            !${{ env.AZURE_WEBAPP_PACKAGE_PATH }}/.env.local
           retention-days: 1
 
   deploy:
