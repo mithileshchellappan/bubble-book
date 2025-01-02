@@ -14,6 +14,6 @@ else
 fi
 
 echo "Starting/Restarting application with PM2..."
-pm2 restart ecosystem.config.js
+pm2 restart ecosystem.config.cjs
 pm2 save
 pm2 logs 
