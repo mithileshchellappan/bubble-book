@@ -12,6 +12,7 @@ interface EditModeProps {
 export const EditMode: React.FC<EditModeProps> = ({ page, onUpdatePage }) => {
   const [isEditing, setIsEditing] = React.useState(false);
   const [customPrompt, setCustomPrompt] = React.useState(page.text || '');
+  const [regeneratingPanelId, setRegeneratingPanelId] = React.useState<string | null>(null);
   const { currentStory, nextPage, previousPage, updatePanelImage } = useStoryStore(); // Add updatePanelImage
 
   const canGoNext = currentStory && currentStory.currentPage < currentStory.pages.length - 1;
@@ -22,9 +23,28 @@ export const EditMode: React.FC<EditModeProps> = ({ page, onUpdatePage }) => {
     setIsEditing(false);
   };
 
-  const handleRegenerate = async (panelId: string) => {
-    const newImageUrl = await mockApi.regenerateImage(panelId);
-    updatePanelImage(page.id, panelId, newImageUrl); // Update the panel image
+  const handleRegenerate = async (panelId: string, prompt: string) => {
+    try {
+      setRegeneratingPanelId(panelId);
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/images/regenerate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ panelId, storyId: currentStory?.id, prompt: prompt }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to regenerate image');
+      }
+
+      const { imageUrl } = await response.json();
+      updatePanelImage(page.id, panelId, imageUrl);
+    } catch (error) {
+      console.error('Error regenerating image:', error);
+    } finally {
+      setRegeneratingPanelId(null);
+    }
   };
 
   return (
@@ -61,20 +81,30 @@ export const EditMode: React.FC<EditModeProps> = ({ page, onUpdatePage }) => {
               <img
                 src={panel.imageUrl}
                 alt={`Story panel ${panel.order + 1}`}
-                className="w-full h-full object-cover"
+                className={`w-full h-full object-cover ${
+                  regeneratingPanelId === panel.id ? 'opacity-50' : ''
+                }`}
               />
               
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 
                             transition-opacity duration-200 flex items-center justify-center">
-                <button
-                  onClick={() => handleRegenerate(panel.id)}
-                  className="absolute top-4 right-4 flex items-center gap-2 px-3 py-2 
-                           rounded-lg bg-white/10 hover:bg-white/20 
-                           transition-colors text-white text-sm font-medium"
-                >
-                  <RefreshCw className="w-4 h-4" />
-                  Regenerate
-                </button>
+                {regeneratingPanelId === panel.id ? (
+                  <div className="absolute top-4 right-4 flex items-center gap-2 px-3 py-2 
+                               text-white text-sm font-medium">
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    Regenerating...
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => handleRegenerate(panel.id, panel.imagePrompt)}
+                    className="absolute top-4 right-4 flex items-center gap-2 px-3 py-2 
+                             rounded-lg bg-white/10 hover:bg-white/20 
+                             transition-colors text-white text-sm font-medium"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                    Regenerate
+                  </button>
+                )}
 
                 <div className="absolute bottom-4 left-4 right-4 bg-white/90 backdrop-blur-sm 
                               p-3 rounded-lg shadow-lg">

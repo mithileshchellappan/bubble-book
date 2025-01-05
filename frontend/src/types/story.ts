@@ -17,6 +17,7 @@ export interface Story {
   }>;
   createdAt: Date;
   completedAt?: Date;
+  currentPage: number;
 }
 
 export interface StoryPage {

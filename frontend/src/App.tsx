@@ -114,8 +114,12 @@ export const App: React.FC = () => {
   const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
   
   if (!clerkPubKey) {
-    console.error('Missing Clerk Publishable Key');
-    return <div>Configuration Error {Object.keys(import.meta.env).map(key => `${key}: ${import.meta.env[key]}`).join(', ')}</div>;
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-purple-100 via-blue-50 to-purple-100 flex flex-col items-center justify-center">
+        <Logo />
+        <p className="text-red-600 mt-4">Configuration Error: Missing Clerk Publishable Key</p>
+      </div>
+    );
   }
 
   return (
@@ -161,7 +165,14 @@ const RequireAuth = ({ children }: { children: React.ReactNode }) => {
   const { isSignedIn, isLoaded } = useUser();
 
   if (!isLoaded) {
-    return <div>Loading...</div>;
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-purple-100 via-blue-50 to-purple-100 flex flex-col items-center justify-center">
+        <div className="animate-bounce mb-4">
+          <Logo />
+        </div>
+        <p className="text-gray-600 mt-4">Loading your magical stories...</p>
+      </div>
+    );
   }
 
   if (!isSignedIn) {
